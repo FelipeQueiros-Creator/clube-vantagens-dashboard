@@ -1323,10 +1323,53 @@ async function gerarApresentacaoParceiro(parceiro){
     footerTag(s, 'Alcance das comunicações');
   }
 
+  // ---------- SLIDE 5b: INVESTIMENTO NA PARCERIA ----------
+  {
+    const s = pptx.addSlide();
+    badgeTitle(s, '05', 'Investimento na parceria');
+    s.addText('Custo real de disparo nos canais oficiais do Clube (E-mail + Push, R$ 0,001673/disparo)', { x:0.6, y:1.15, w:11.5, h:0.4, fontSize:13, italic:true, color:GRAY, fontFace:'Arial' });
+
+    const custoEmail = totalEnviados * CUSTO_UNIT;
+    const custoPush = totalPushSent * CUSTO_UNIT;
+    const custoTotal = custoEmail + custoPush;
+    const custoMedioPorComm = recsAll.length ? custoTotal / recsAll.length : 0;
+
+    const kpisInv = [
+      [fmtBRL(custoTotal), 'Investimento total no período', NAVY],
+      [fmtBRL(custoEmail), 'Investimento em E-mail', NAVY],
+      [fmtBRL(custoPush), 'Investimento em Push', ORANGE],
+      [fmtBRL(custoMedioPorComm), 'Custo médio por comunicação', ORANGE],
+    ];
+    const kwI = 2.85, khI = 1.35, kgapI = 0.25;
+    kpisInv.forEach((k,i)=>{
+      const x = 0.6 + i*(kwI+kgapI);
+      s.addShape(pptx.ShapeType.roundRect, { x, y:1.75, w:kwI, h:khI, rectRadius:0.08, fill:{color:k[2]}, line:{type:'none'} });
+      s.addText(k[0], { x:x+0.15, y:1.85, w:kwI-0.3, h:0.55, fontSize:18, bold:true, color:WHITE, fontFace:'Arial' });
+      s.addText(k[1], { x:x+0.15, y:2.4, w:kwI-0.3, h:0.6, fontSize:10, color:WHITE, fontFace:'Arial' });
+    });
+
+    s.addText('Evolução mensal do investimento', { x:0.6, y:3.55, w:6, h:0.35, fontSize:14, bold:true, color:'1F2937', fontFace:'Arial' });
+    const mesesInv = uniqueSorted([...sfmcHist.map(r=>r.AnoMes), ...pushHist.map(r=>r.AnoMes)]);
+    const investPorMes = mesesInv.map(mk=>{
+      const e = sfmcHist.filter(r=>r.AnoMes===mk).reduce((s2,r)=>s2+r.EmailsEnviados,0);
+      const p = pushHist.filter(r=>r.AnoMes===mk).reduce((s2,r)=>s2+r.Sent,0);
+      return (e+p) * CUSTO_UNIT;
+    });
+    if(mesesInv.length){
+      s.addChart(pptx.ChartType.bar, [{ name:'Investimento (R$)', labels:mesesInv.map(monthLabel), values:investPorMes }],
+        { x:0.6, y:3.95, w:12.1, h:2.6, chartColors:[NAVY], showLegend:false, showValue:true, dataLabelPosition:'outEnd', dataLabelFormatCode:'"R$"#,##0',
+          catAxisLabelColor:'6B7280', valAxisLabelColor:'6B7280', valGridLine:{color:'EEEEEE'}, catGridLine:{style:'none'} });
+    } else {
+      s.addText('Sem volume de disparo rastreado para este parceiro no período.', { x:0.6, y:4.0, w:11, h:0.5, fontSize:12, italic:true, color:GRAY, fontFace:'Arial' });
+    }
+    s.addText('Valor referente apenas ao custo tecnológico de disparo (E-mail/Push via SFMC); não inclui comissões, trade ou mídia paga.', { x:0.6, y:6.75, w:12, h:0.35, fontSize:9.5, italic:true, color:GRAY, fontFace:'Arial' });
+    footerTag(s, 'Investimento na parceria');
+  }
+
   // ---------- SLIDE 6: PERFORMANCE DOS DISPAROS ----------
   {
     const s = pptx.addSlide();
-    badgeTitle(s, '05', 'Performance dos disparos');
+    badgeTitle(s, '06', 'Performance dos disparos');
     const kpis6 = [
       [fmtPctSlide(emailEntregaTaxa), 'Taxa média de entrega (e-mail)', NAVY],
       [fmtPctSlide(pushAberturaTaxa), 'Taxa média de abertura (push)', ORANGE],
@@ -1367,7 +1410,7 @@ async function gerarApresentacaoParceiro(parceiro){
   {
     const s = pptx.addSlide();
     s.background = { color: NAVY };
-    noteBadge(s, 0.5, 0.5, '06');
+    noteBadge(s, 0.5, 0.5, '07');
     s.addText(`${parceiro} esteve presente em diversos pontos de contato com os beneficiários.`, { x:1.05, y:0.35, w:11.7, h:1.1, fontSize:22, bold:true, color:WHITE, fontFace:'Arial' });
     horizontalSteps(s, 2.2, [
       {label:'Beneficiário'}, {label:'Recebe e-mail'}, {label:'Recebe push'}, {label:'Entra no Clube'}, {label:'Visualiza parceiro'}, {label:`Aproveita o benefício ${parceiro}`, accent:true},
@@ -1379,7 +1422,7 @@ async function gerarApresentacaoParceiro(parceiro){
   // ---------- SLIDE 8: MUITO ALÉM DA DIVULGAÇÃO ----------
   {
     const s = pptx.addSlide();
-    badgeTitle(s, '07', 'Muito além da divulgação');
+    badgeTitle(s, '08', 'Muito além da divulgação');
     s.addText(`O que a parceria com o Clube de Vantagens Hapvida entrega para ${parceiro}`, { x:0.6, y:1.15, w:11.7, h:0.4, fontSize:13, color:GRAY, fontFace:'Arial' });
     const props = ['Exposição da marca','Recorrência de comunicação','Fortalecimento institucional','Geração de tráfego','Incentivo à utilização do benefício','Relacionamento com milhões de beneficiários'];
     const cw8 = 5.9, ch8 = 1.35, gapx = 0.3, gapy = 0.25;
@@ -1396,7 +1439,7 @@ async function gerarApresentacaoParceiro(parceiro){
   // ---------- SLIDE 9: PRÓXIMOS PASSOS ----------
   {
     const s = pptx.addSlide();
-    badgeTitle(s, '08', 'Próximos passos');
+    badgeTitle(s, '09', 'Próximos passos');
     s.addText('A parceria continua: novas ações a caminho', { x:0.6, y:1.15, w:11.5, h:0.4, fontSize:13, italic:true, color:GRAY, fontFace:'Arial' });
     horizontalSteps(s, 1.9, [
       {label:'Novas campanhas'}, {label:'Datas sazonais', accent:true}, {label:'Novas oportunidades'}, {label:'Maior engajamento', accent:true}, {label:'Crescimento da parceria'},
