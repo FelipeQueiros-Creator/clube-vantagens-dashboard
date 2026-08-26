@@ -1379,10 +1379,59 @@ async function gerarApresentacaoParceiro(parceiro){
     footerTag(s, 'Investimento na parceria');
   }
 
+  // ---------- SLIDE 5c: RENTABILIDADE DA PARCERIA ----------
+  {
+    const s = pptx.addSlide();
+    badgeTitle(s, '06', 'Rentabilidade da parceria');
+    s.addText('Faturamento gerado × custo de disparo, no mesmo período de referência (Mês Referência)', { x:0.6, y:1.15, w:11.5, h:0.4, fontSize:13, italic:true, color:GRAY, fontFace:'Arial' });
+
+    const rentRows = crossData(grupo, null);
+    const rentRowsComFat = rentRows.filter(r=>r.Faturamento!==null);
+    const rentTotalFat = rentRowsComFat.reduce((s2,r)=>s2+r.Faturamento,0);
+    const rentTotalCom = rentRows.reduce((s2,r)=>s2+r.TotalComunicacoes,0);
+    const rentComComFat = rentRowsComFat.reduce((s2,r)=>s2+r.TotalComunicacoes,0);
+    const rentReceitaPorCom = rentComComFat ? rentTotalFat/rentComComFat : 0;
+    const rentCustoTotal = (totalEnviados + totalPushSent) * CUSTO_UNIT;
+    const rentReceitaLiquida = rentTotalFat - rentCustoTotal;
+    const rentGruposComDado = new Set(rentRowsComFat.map(r=>r.Grupo)).size;
+    const rentTemFat = rentRowsComFat.length > 0;
+
+    const rentKpis1 = [
+      [fmtBRL(rentTotalFat), 'Faturamento no período (com dado)', NAVY],
+      [fmtInt(rentTotalCom), 'Comunicações no período', NAVY],
+      [fmtBRL(rentReceitaPorCom), 'Receita média / comunicação', NAVY],
+      [fmtBRL(rentCustoTotal), 'Custo total de disparos', ORANGE],
+    ];
+    const kwR1 = 2.85, khR1 = 1.35, kgapR1 = 0.25;
+    rentKpis1.forEach((k,i)=>{
+      const x = 0.6 + i*(kwR1+kgapR1);
+      s.addShape(pptx.ShapeType.roundRect, { x, y:1.75, w:kwR1, h:khR1, rectRadius:0.08, fill:{color:k[2]}, line:{type:'none'} });
+      s.addText(k[0], { x:x+0.15, y:1.85, w:kwR1-0.3, h:0.55, fontSize:18, bold:true, color:WHITE, fontFace:'Arial' });
+      s.addText(k[1], { x:x+0.15, y:2.4, w:kwR1-0.3, h:0.6, fontSize:10, color:WHITE, fontFace:'Arial' });
+    });
+
+    const rentKpis2 = [
+      [fmtBRL(rentReceitaLiquida), 'Receita líquida', rentReceitaLiquida>=0 ? NAVY : ORANGE, 'Faturamento − Custo de Disparo'],
+      [rentTemFat ? `${rentGruposComDado}/1` : '0/1', 'Grupos com faturamento', NAVY, ''],
+      [rentTemFat ? grupoLabel(grupo) : '—', 'Melhor retorno por comunicação', ORANGE, rentTemFat ? fmtBRL(rentReceitaPorCom)+' / comunicação' : 'Sem faturamento rastreado'],
+    ];
+    const kwR2 = 3.9, khR2 = 1.55, kgapR2 = 0.25;
+    rentKpis2.forEach((k,i)=>{
+      const x = 0.6 + i*(kwR2+kgapR2);
+      s.addShape(pptx.ShapeType.roundRect, { x, y:3.35, w:kwR2, h:khR2, rectRadius:0.08, fill:{color:k[2]}, line:{type:'none'} });
+      s.addText(k[0], { x:x+0.18, y:3.45, w:kwR2-0.36, h:0.55, fontSize:16, bold:true, color:WHITE, fontFace:'Arial' });
+      s.addText(k[1], { x:x+0.18, y:4.0, w:kwR2-0.36, h:0.4, fontSize:10, color:WHITE, fontFace:'Arial' });
+      if(k[3]) s.addText(k[3], { x:x+0.18, y:4.38, w:kwR2-0.36, h:0.35, fontSize:8, color:'DCE3F7', fontFace:'Arial' });
+    });
+
+    s.addText('Faturamento pelo Mês Referência (mês em que a venda ocorreu). Custo de disparo considera apenas E-mail e Push via SFMC (R$ 0,001673/disparo); não inclui comissões, trade ou mídia paga.', { x:0.6, y:5.15, w:12, h:0.5, fontSize:9.5, italic:true, color:GRAY, fontFace:'Arial' });
+    footerTag(s, 'Rentabilidade da parceria');
+  }
+
   // ---------- SLIDE 6: PERFORMANCE DOS DISPAROS ----------
   {
     const s = pptx.addSlide();
-    badgeTitle(s, '06', 'Performance dos disparos');
+    badgeTitle(s, '07', 'Performance dos disparos');
     const kpis6 = [
       [fmtPctSlide(emailEntregaTaxa), 'Taxa média de entrega (e-mail)', NAVY],
       [fmtPctSlide(pushAberturaTaxa), 'Taxa média de abertura (push)', ORANGE],
@@ -1423,7 +1472,7 @@ async function gerarApresentacaoParceiro(parceiro){
   {
     const s = pptx.addSlide();
     s.background = { color: NAVY };
-    noteBadge(s, 0.5, 0.5, '07');
+    noteBadge(s, 0.5, 0.5, '08');
     s.addText(`${parceiro} esteve presente em diversos pontos de contato com os beneficiários.`, { x:1.05, y:0.35, w:11.7, h:1.1, fontSize:22, bold:true, color:WHITE, fontFace:'Arial' });
     horizontalSteps(s, 2.2, [
       {label:'Beneficiário', icon:'⚉'}, {label:'Recebe e-mail', icon:'✉'}, {label:'Recebe push', icon:'⚑'}, {label:'Entra no Clube', icon:'⌂'}, {label:'Visualiza parceiro', icon:'◎'}, {label:`Aproveita o benefício ${parceiro}`, icon:'★', accent:true},
@@ -1435,7 +1484,7 @@ async function gerarApresentacaoParceiro(parceiro){
   // ---------- SLIDE 8: MUITO ALÉM DA DIVULGAÇÃO ----------
   {
     const s = pptx.addSlide();
-    badgeTitle(s, '08', 'Muito além da divulgação');
+    badgeTitle(s, '09', 'Muito além da divulgação');
     s.addText(`O que a parceria com o Clube de Vantagens Hapvida entrega para ${parceiro}`, { x:0.6, y:1.15, w:11.7, h:0.4, fontSize:13, color:GRAY, fontFace:'Arial' });
     const props = [
       ['Exposição da marca','◎'],['Recorrência de comunicação','⟲'],
@@ -1457,7 +1506,7 @@ async function gerarApresentacaoParceiro(parceiro){
   // ---------- SLIDE 9: PRÓXIMOS PASSOS ----------
   {
     const s = pptx.addSlide();
-    badgeTitle(s, '09', 'Próximos passos');
+    badgeTitle(s, '10', 'Próximos passos');
     s.addText('A parceria continua: novas ações a caminho', { x:0.6, y:1.15, w:11.5, h:0.4, fontSize:13, italic:true, color:GRAY, fontFace:'Arial' });
     horizontalSteps(s, 1.9, [
       {label:'Novas campanhas'}, {label:'Datas sazonais', accent:true}, {label:'Novas oportunidades'}, {label:'Maior engajamento', accent:true}, {label:'Crescimento da parceria'},
